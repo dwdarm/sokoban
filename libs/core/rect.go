@@ -17,3 +17,7 @@ func (r *Rect) ToSDLRect() *sdl.Rect {
 		H: int32(r.H),
 	}
 }
+
+func (r *Rect) HasIntersection(other *Rect) bool {
+	return r.ToSDLRect().HasIntersection(other.ToSDLRect())
+}

@@ -4,7 +4,6 @@ import (
 	"github.com/dwdarm/sokoban/config"
 	"github.com/dwdarm/sokoban/libs/core"
 	"github.com/dwdarm/sokoban/libs/graphics"
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 var CHAR_SIZE int32 = 36
@@ -42,11 +41,17 @@ func (p *Player) Tick(input core.Input, timer core.Timer, objects []Object) {
 	transform := p.GetTransform()
 
 	p.Movement = core.Vector2{
-		X: float32(input.GetBindValue("horizontal")) * float32(CHAR_WALK_SPEED) * float32(timer.DeltaTime()),
-		Y: float32(input.GetBindValue("vertical")) * float32(CHAR_WALK_SPEED) * float32(timer.DeltaTime()),
+		X: float32(input.GetValue("horizontal")) * float32(CHAR_WALK_SPEED) * float32(timer.DeltaTime()),
+		Y: float32(input.GetValue("vertical")) * float32(CHAR_WALK_SPEED) * float32(timer.DeltaTime()),
 	}
 
 	p.Movement.Clamp(float32(-CHAR_WALK_SPEED), float32(CHAR_WALK_SPEED))
+
+	if p.Movement.X != 0.0 {
+		p.Movement.Y = 0.0
+	} else if p.Movement.Y != 0.0 {
+		p.Movement.X = 0.0
+	}
 
 	if p.Movement.X > 0.0 {
 		p.Animation.X = 0
@@ -86,7 +91,7 @@ func (p *Player) Tick(input core.Input, timer core.Timer, objects []Object) {
 	for _, obj := range objects {
 		objTransform := obj.GetTransform()
 
-		if transform.GetGlobalBound().ToSDLRect().HasIntersection(objTransform.GetGlobalBound().ToSDLRect()) {
+		if transform.GetGlobalBound().HasIntersection(objTransform.GetGlobalBound()) {
 			if _, ok := obj.(*Player); !ok {
 				if _, ok := obj.(*Wall); ok {
 					if transform.Forward.X == 1 && transform.Forward.Y == 0 {
@@ -122,8 +127,8 @@ func (p *Player) Tick(input core.Input, timer core.Timer, objects []Object) {
 	}
 }
 
-func (p *Player) Draw(renderer *sdl.Renderer) {
-	p.Sprite.Draw(renderer)
+func (p *Player) Draw(game core.Game) {
+	p.Sprite.Draw(game)
 }
 
 func (p *Player) Intersect(obj Object) {

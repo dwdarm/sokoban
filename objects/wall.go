@@ -4,7 +4,6 @@ import (
 	"github.com/dwdarm/sokoban/config"
 	"github.com/dwdarm/sokoban/libs/core"
 	"github.com/dwdarm/sokoban/libs/graphics"
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 type Wall struct {
@@ -30,8 +29,8 @@ func (w *Wall) Tick(input core.Input, timer core.Timer, objects []Object) {
 
 }
 
-func (w *Wall) Draw(renderer *sdl.Renderer) {
-	w.Sprite.Draw(renderer)
+func (w *Wall) Draw(game core.Game) {
+	w.Sprite.Draw(game)
 }
 
 func (w *Wall) Intersect(Object) {

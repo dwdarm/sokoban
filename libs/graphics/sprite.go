@@ -2,7 +2,6 @@ package graphics
 
 import (
 	"github.com/dwdarm/sokoban/libs/core"
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 type Sprite interface {
@@ -11,19 +10,25 @@ type Sprite interface {
 
 	GetTransform() *core.Transform
 
-	Draw(renderer *sdl.Renderer)
+	GetTexture() Texture
+	GetTextureRect() *core.Rect
+
+	Draw(game core.Game)
 }
 
 type SpriteImp struct {
 	texture     Texture
-	textureRect *sdl.Rect
+	textureRect core.Rect
 	core.Transform
 }
 
 func NewSprite() Sprite {
 	s := &SpriteImp{}
 	s.texture = nil
-	s.textureRect = &sdl.Rect{0, 0, 0, 0}
+	s.textureRect.X = 0
+	s.textureRect.Y = 0
+	s.textureRect.W = 0
+	s.textureRect.H = 0
 	s.Scale.X = 1.0
 	s.Scale.Y = 1.0
 
@@ -32,13 +37,19 @@ func NewSprite() Sprite {
 
 func (s *SpriteImp) SetTexture(texture Texture) {
 	s.texture = texture
-	s.textureRect = &sdl.Rect{0, 0, 0, 0}
+	s.textureRect.X = 0
+	s.textureRect.Y = 0
+	s.textureRect.W = 0
+	s.textureRect.H = 0
 	s.Size.X = float32(texture.GetWidth())
 	s.Size.Y = float32(texture.GetHeight())
 }
 
 func (s *SpriteImp) SetTextureRect(x int32, y int32, w int32, h int32) {
-	s.textureRect = &sdl.Rect{x, y, w, h}
+	s.textureRect.X = float32(x)
+	s.textureRect.Y = float32(y)
+	s.textureRect.W = float32(w)
+	s.textureRect.H = float32(h)
 	s.Size.X = float32(w)
 	s.Size.Y = float32(h)
 }
@@ -47,6 +58,14 @@ func (s *SpriteImp) GetTransform() *core.Transform {
 	return &s.Transform
 }
 
-func (s *SpriteImp) Draw(renderer *sdl.Renderer) {
-	Draw(renderer, s.texture, s.textureRect, &s.Transform)
+func (s *SpriteImp) GetTexture() Texture {
+	return s.texture
+}
+
+func (s *SpriteImp) GetTextureRect() *core.Rect {
+	return &s.textureRect
+}
+
+func (s *SpriteImp) Draw(game core.Game) {
+	Draw(game, s)
 }

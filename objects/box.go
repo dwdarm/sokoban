@@ -4,7 +4,6 @@ import (
 	"github.com/dwdarm/sokoban/config"
 	"github.com/dwdarm/sokoban/libs/core"
 	"github.com/dwdarm/sokoban/libs/graphics"
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 type Box struct {
@@ -39,22 +38,9 @@ func (b *Box) Push(x float32, y float32, objects []Object) bool {
 		if obj != b {
 			if _, isPlayer := obj.(*Player); !isPlayer {
 				if _, isTarget := obj.(*Target); !isTarget {
-					rectA := &sdl.Rect{
-						X: int32(transform.Position.X),
-						Y: int32(transform.Position.Y),
-						W: int32(transform.Size.X),
-						H: int32(transform.Size.Y),
-					}
-
 					objTransform := obj.GetTransform()
-					rectB := &sdl.Rect{
-						X: int32(objTransform.Position.X),
-						Y: int32(objTransform.Position.Y),
-						W: int32(objTransform.Size.X),
-						H: int32(objTransform.Size.Y),
-					}
 
-					if rectA.HasIntersection(rectB) {
+					if transform.GetGlobalBound().HasIntersection(objTransform.GetGlobalBound()) {
 						if transform.Forward.X == 1 && transform.Forward.Y == 0 {
 							transform.Position.X = objTransform.Position.X - transform.Size.X
 						} else if transform.Forward.X == -1 && transform.Forward.Y == 0 {
@@ -77,8 +63,8 @@ func (b *Box) Push(x float32, y float32, objects []Object) bool {
 	return true
 }
 
-func (b *Box) Draw(renderer *sdl.Renderer) {
-	b.Sprite.Draw(renderer)
+func (b *Box) Draw(game core.Game) {
+	b.Sprite.Draw(game)
 }
 
 func (b *Box) Intersect(obj Object) {

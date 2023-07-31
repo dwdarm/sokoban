@@ -1,12 +1,13 @@
 package graphics
 
 import (
+	"github.com/dwdarm/sokoban/libs/core"
 	"github.com/veandco/go-sdl2/img"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
 type Texture interface {
-	LoadFromFile(renderer *sdl.Renderer, path string) error
+	LoadFromFile(game core.Game, path string) error
 	GetSDLTexture() *sdl.Texture
 	GetWidth() int32
 	GetHeight() int32
@@ -27,14 +28,14 @@ func NewTexture() Texture {
 	}
 }
 
-func (t *TextureImp) LoadFromFile(renderer *sdl.Renderer, path string) error {
+func (t *TextureImp) LoadFromFile(game core.Game, path string) error {
 	img, err := img.Load(path)
 	if err != nil {
 		return err
 	}
 	defer img.Free()
 
-	tex, err := renderer.CreateTextureFromSurface(img)
+	tex, err := game.GetRenderer().CreateTextureFromSurface(img)
 	if err != nil {
 		return err
 	}

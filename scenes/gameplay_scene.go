@@ -11,7 +11,7 @@ import (
 )
 
 type GameplayScene struct {
-	renderer    *sdl.Renderer
+	game        core.Game
 	texture     graphics.Texture
 	objects     []objects.Object
 	targets     []objects.Object
@@ -20,14 +20,14 @@ type GameplayScene struct {
 	targetTotal int
 }
 
-func NewGameplayScene(renderer *sdl.Renderer) core.Scene {
+func NewGameplayScene(game core.Game) core.Scene {
 	texture := graphics.NewTexture()
-	if err := texture.LoadFromFile(renderer, config.TEXTURE_PATH); err != nil {
+	if err := texture.LoadFromFile(game, config.TEXTURE_PATH); err != nil {
 		panic(err)
 	}
 
 	return &GameplayScene{
-		renderer:    renderer,
+		game:        game,
 		texture:     texture,
 		level:       0,
 		targetCount: 0,
@@ -91,18 +91,18 @@ func (s *GameplayScene) DrawBackground() {
 				H: int32(config.OBJECT_TILE_SIZE),
 			}
 
-			s.renderer.Copy(s.texture.GetSDLTexture(), &clip, &quad)
+			s.game.GetRenderer().Copy(s.texture.GetSDLTexture(), &clip, &quad)
 		}
 	}
 }
 
 func (s *GameplayScene) DrawObjects() {
 	for _, target := range s.targets {
-		target.Draw(s.renderer)
+		target.Draw(s.game)
 	}
 
 	for _, object := range s.objects {
-		object.Draw(s.renderer)
+		object.Draw(s.game)
 	}
 }
 
@@ -147,16 +147,17 @@ func (s *GameplayScene) AppendObject(objectType int, x int, y int) {
 }
 
 func (s *GameplayScene) Draw() {
+	renderer := s.game.GetRenderer()
 	f, _, _, _, _ := s.texture.GetSDLTexture().Query()
-	textureBg, err := s.renderer.CreateTexture(f, sdl.TEXTUREACCESS_TARGET, int32(config.SCREEN_WIDTH), int32(config.SCREEN_HEIGHT))
+	textureBg, err := renderer.CreateTexture(f, sdl.TEXTUREACCESS_TARGET, int32(config.SCREEN_WIDTH), int32(config.SCREEN_HEIGHT))
 	if err != nil {
 		panic(err)
 	}
 	defer textureBg.Destroy()
 
-	s.renderer.SetRenderTarget(textureBg)
-	s.renderer.SetDrawColor(0, 0, 0, 255)
-	s.renderer.Clear()
+	renderer.SetRenderTarget(textureBg)
+	renderer.SetDrawColor(0, 0, 0, 255)
+	renderer.Clear()
 
 	// draw background
 	s.DrawBackground()
@@ -164,6 +165,6 @@ func (s *GameplayScene) Draw() {
 	// draw objects
 	s.DrawObjects()
 
-	s.renderer.SetRenderTarget(nil)
-	s.renderer.Copy(textureBg, nil, nil)
+	renderer.SetRenderTarget(nil)
+	renderer.Copy(textureBg, nil, nil)
 }
