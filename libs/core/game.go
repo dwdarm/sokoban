@@ -11,10 +11,11 @@ type Game interface {
 }
 
 type GameImp struct {
-	window   *sdl.Window
-	renderer *sdl.Renderer
-	options  *GameOptions
-	input    Input
+	window      *sdl.Window
+	renderer    *sdl.Renderer
+	textureBuff *sdl.Texture
+	options     *GameOptions
+	input       Input
 }
 
 type GameOptions struct {
@@ -38,11 +39,17 @@ func NewGame(options *GameOptions, input Input) Game {
 		panic(err)
 	}
 
+	textureBuff, err := renderer.CreateTexture(uint32(sdl.PIXELFORMAT_RGBA32), sdl.TEXTUREACCESS_TARGET, options.WindowWidth, options.WindowHeight)
+	if err != nil {
+		panic(err)
+	}
+
 	return &GameImp{
-		window:   window,
-		renderer: renderer,
-		options:  options,
-		input:    input,
+		window:      window,
+		renderer:    renderer,
+		textureBuff: textureBuff,
+		options:     options,
+		input:       input,
 	}
 }
 
@@ -69,11 +76,7 @@ func (g *GameImp) Run(scene Scene) {
 		g.input.Reset()
 
 		renderer := g.renderer
-		textureBuff, err := renderer.CreateTexture(uint32(sdl.PIXELFORMAT_RGBA32), sdl.TEXTUREACCESS_TARGET, g.options.WindowWidth, g.options.WindowHeight)
-		if err != nil {
-			panic(err)
-		}
-		defer textureBuff.Destroy()
+		textureBuff := g.textureBuff
 
 		renderer.SetRenderTarget(textureBuff)
 		renderer.SetDrawColor(0, 0, 0, 255)
@@ -99,6 +102,10 @@ func (g *GameImp) Destroy() {
 
 	if g.renderer != nil {
 		g.renderer.Destroy()
+	}
+
+	if g.textureBuff != nil {
+		g.textureBuff.Destroy()
 	}
 
 	sdl.Quit()
