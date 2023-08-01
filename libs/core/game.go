@@ -13,6 +13,7 @@ type Game interface {
 type GameImp struct {
 	window   *sdl.Window
 	renderer *sdl.Renderer
+	options  *GameOptions
 	input    Input
 }
 
@@ -40,6 +41,7 @@ func NewGame(options *GameOptions, input Input) Game {
 	return &GameImp{
 		window:   window,
 		renderer: renderer,
+		options:  options,
 		input:    input,
 	}
 }
@@ -66,12 +68,22 @@ func (g *GameImp) Run(scene Scene) {
 		scene.Tick(g.input, timer)
 		g.input.Reset()
 
-		g.renderer.SetDrawColor(0, 0, 0, 255)
-		g.renderer.Clear()
+		renderer := g.renderer
+		textureBuff, err := renderer.CreateTexture(uint32(sdl.PIXELFORMAT_RGBA32), sdl.TEXTUREACCESS_TARGET, g.options.WindowWidth, g.options.WindowHeight)
+		if err != nil {
+			panic(err)
+		}
+		defer textureBuff.Destroy()
+
+		renderer.SetRenderTarget(textureBuff)
+		renderer.SetDrawColor(0, 0, 0, 255)
+		renderer.Clear()
 
 		scene.Draw()
 
-		g.renderer.Present()
+		renderer.SetRenderTarget(nil)
+		renderer.Copy(textureBuff, nil, nil)
+		renderer.Present()
 	}
 
 }

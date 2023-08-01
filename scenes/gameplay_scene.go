@@ -7,12 +7,12 @@ import (
 	"github.com/dwdarm/sokoban/libs/core"
 	"github.com/dwdarm/sokoban/libs/graphics"
 	"github.com/dwdarm/sokoban/objects"
-	"github.com/veandco/go-sdl2/sdl"
 )
 
 type GameplayScene struct {
 	game        core.Game
 	texture     graphics.Texture
+	floors      []objects.Object
 	objects     []objects.Object
 	targets     []objects.Object
 	level       int
@@ -36,6 +36,7 @@ func NewGameplayScene(game core.Game) core.Scene {
 }
 
 func (s *GameplayScene) Start() {
+	s.GenerateFloors()
 	s.SpawnObjects()
 }
 
@@ -75,24 +76,23 @@ func (s *GameplayScene) Tick(input core.Input, timer core.Timer) {
 
 }
 
-func (s *GameplayScene) DrawBackground() {
+func (s *GameplayScene) GenerateFloors() {
 	for y := 0; y < config.TILE_COUNT_V; y++ {
 		for x := 0; x < config.TILE_COUNT_H; x++ {
-			clip := sdl.Rect{
-				X: 11 * int32(config.TEXTURE_TILE_SIZE),
-				Y: 6 * int32(config.TEXTURE_TILE_SIZE),
-				W: int32(config.TEXTURE_TILE_SIZE),
-				H: int32(config.TEXTURE_TILE_SIZE),
-			}
-			quad := sdl.Rect{
-				X: int32(x) * int32(config.OBJECT_TILE_SIZE),
-				Y: int32(y) * int32(config.OBJECT_TILE_SIZE),
-				W: int32(config.OBJECT_TILE_SIZE),
-				H: int32(config.OBJECT_TILE_SIZE),
-			}
-
-			s.game.GetRenderer().Copy(s.texture.GetSDLTexture(), &clip, &quad)
+			floor := objects.NewFloor(s.texture)
+			floorT := floor.GetTransform()
+			floorT.Size.X = float32(config.OBJECT_TILE_SIZE)
+			floorT.Size.Y = float32(config.OBJECT_TILE_SIZE)
+			floorT.Position.X = float32(x * config.OBJECT_TILE_SIZE)
+			floorT.Position.Y = float32(y * config.OBJECT_TILE_SIZE)
+			s.floors = append(s.floors, floor)
 		}
+	}
+}
+
+func (s *GameplayScene) DrawFloors() {
+	for _, floor := range s.floors {
+		floor.Draw(s.game)
 	}
 }
 
@@ -147,24 +147,9 @@ func (s *GameplayScene) AppendObject(objectType int, x int, y int) {
 }
 
 func (s *GameplayScene) Draw() {
-	renderer := s.game.GetRenderer()
-	f, _, _, _, _ := s.texture.GetSDLTexture().Query()
-	textureBg, err := renderer.CreateTexture(f, sdl.TEXTUREACCESS_TARGET, int32(config.SCREEN_WIDTH), int32(config.SCREEN_HEIGHT))
-	if err != nil {
-		panic(err)
-	}
-	defer textureBg.Destroy()
-
-	renderer.SetRenderTarget(textureBg)
-	renderer.SetDrawColor(0, 0, 0, 255)
-	renderer.Clear()
-
 	// draw background
-	s.DrawBackground()
+	s.DrawFloors()
 
 	// draw objects
 	s.DrawObjects()
-
-	renderer.SetRenderTarget(nil)
-	renderer.Copy(textureBg, nil, nil)
 }
