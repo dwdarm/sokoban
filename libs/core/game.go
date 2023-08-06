@@ -2,20 +2,24 @@ package core
 
 import (
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 )
 
 type Game interface {
-	Run(scene Scene)
+	Run()
 	GetRenderer() *sdl.Renderer
+	GetSceneManager() SceneManager
+	GetOptions() *GameOptions
 	Destroy()
 }
 
 type GameImp struct {
-	window      *sdl.Window
-	renderer    *sdl.Renderer
-	textureBuff *sdl.Texture
-	options     *GameOptions
-	input       Input
+	window       *sdl.Window
+	renderer     *sdl.Renderer
+	textureBuff  *sdl.Texture
+	options      *GameOptions
+	sceneManager SceneManager
+	input        Input
 }
 
 type GameOptions struct {
@@ -26,6 +30,10 @@ type GameOptions struct {
 
 func NewGame(options *GameOptions, input Input) Game {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
+		panic(err)
+	}
+
+	if err := ttf.Init(); err != nil {
 		panic(err)
 	}
 
@@ -44,17 +52,20 @@ func NewGame(options *GameOptions, input Input) Game {
 		panic(err)
 	}
 
+	sceneManager := NewSceneManager()
+
 	return &GameImp{
-		window:      window,
-		renderer:    renderer,
-		textureBuff: textureBuff,
-		options:     options,
-		input:       input,
+		window:       window,
+		renderer:     renderer,
+		textureBuff:  textureBuff,
+		options:      options,
+		sceneManager: sceneManager,
+		input:        input,
 	}
 }
 
-func (g *GameImp) Run(scene Scene) {
-	scene.Start()
+func (g *GameImp) Run() {
+	g.sceneManager.Start()
 
 	timer := NewTimer()
 
@@ -72,7 +83,7 @@ func (g *GameImp) Run(scene Scene) {
 
 		timer.Tick()
 
-		scene.Tick(g.input, timer)
+		g.sceneManager.Tick(g.input, timer)
 		g.input.Reset()
 
 		renderer := g.renderer
@@ -82,7 +93,7 @@ func (g *GameImp) Run(scene Scene) {
 		renderer.SetDrawColor(0, 0, 0, 255)
 		renderer.Clear()
 
-		scene.Draw()
+		g.sceneManager.Draw()
 
 		renderer.SetRenderTarget(nil)
 		renderer.Copy(textureBuff, nil, nil)
@@ -93,6 +104,14 @@ func (g *GameImp) Run(scene Scene) {
 
 func (g *GameImp) GetRenderer() *sdl.Renderer {
 	return g.renderer
+}
+
+func (g *GameImp) GetSceneManager() SceneManager {
+	return g.sceneManager
+}
+
+func (g *GameImp) GetOptions() *GameOptions {
+	return g.options
 }
 
 func (g *GameImp) Destroy() {
@@ -107,6 +126,8 @@ func (g *GameImp) Destroy() {
 	if g.textureBuff != nil {
 		g.textureBuff.Destroy()
 	}
+
+	g.sceneManager.Exit()
 
 	sdl.Quit()
 }

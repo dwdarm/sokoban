@@ -153,3 +153,9 @@ func (s *GameplayScene) Draw() {
 	// draw objects
 	s.DrawObjects()
 }
+
+func (s *GameplayScene) Exit() {
+	if s.texture != nil {
+		defer s.texture.Destory()
+	}
+}

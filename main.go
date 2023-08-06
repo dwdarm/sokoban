@@ -21,6 +21,10 @@ func main() {
 		MaxEventKey: sdl.K_s,
 		MaxValue:    1.0,
 	})
+	input.RegisterInput("confirm", &core.KeyboardBinding{
+		MaxEventKey: sdl.K_SPACE,
+		MaxValue:    1.0,
+	})
 
 	game := core.NewGame(&core.GameOptions{
 		Title:        "Sokoban",
@@ -29,5 +33,8 @@ func main() {
 	}, input)
 	defer game.Destroy()
 
-	game.Run(scenes.NewGameplayScene(game))
+	sceneManager := game.GetSceneManager()
+	sceneManager.SwitchScene(scenes.NewIntroScene(game))
+
+	game.Run()
 }
